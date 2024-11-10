@@ -115,6 +115,57 @@
     </div>
   </div>
 
+  <div class="field is-horizontal">
+    <div class="field-label is-normal">
+      <%= label class: "label" do %>
+        <%= gettext("Night Rate (Cost per unit)") %>
+      <% end %>
+    </div>
+    <div class="field-body">
+      <div class="field">
+        <div class="control">
+          <%= number_input f, :night_cost_per_unit, class: "input", step: "0.0001" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="field is-horizontal">
+    <div class="field-label is-normal">
+      <%= label class: "label" do %>
+        <%= gettext("Night Session Fee") %>
+      <% end %>
+    </div>
+    <div class="field-body">
+      <div class="field">
+        <div class="control">
+          <%= number_input f, :night_session_fee, class: "input", step: "0.01" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="field is-horizontal">
+    <div class="field-label is-normal">
+      <%= label class: "label" do %>
+        <%= gettext("Night Hours") %>
+      <% end %>
+    </div>
+    <div class="field-body">
+      <div class="field has-addons">
+        <p class="control">
+          <%= number_input f, :night_start_hour, class: "input", min: 0, max: 23 %>
+        </p>
+        <p class="control">
+          <span class="button is-static">to</span>
+        </p>
+        <p class="control">
+          <%= number_input f, :night_end_hour, class: "input", min: 0, max: 23 %>
+        </p>
+      </div>
+    </div>
+  </div>
+
   <div class="field is-horizontal mt-5">
     <div class="field-label"></div>
     <div class="field-body">

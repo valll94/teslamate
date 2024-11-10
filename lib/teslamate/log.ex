@@ -548,44 +548,44 @@ defmodule TeslaMate.Log do
           0.0
 
         {%{charge_energy_used: kwh_used, charge_energy_added: kwh_added},
-         %CP{
-           geofence: %GeoFence{
-             billing_type: :per_kwh,
-             cost_per_unit: cost_per_kwh,
-             session_fee: session_fee
-           }
-         }} ->
+         %CP{geofence: %GeoFence{} = geofence} = cp} ->
           if match?(%Decimal{}, kwh_used) or match?(%Decimal{}, kwh_added) do
+            # Get cost values based on time
+            {cost_per_unit, session_fee} = get_cost_values(geofence, cp.start_date)
+            
             cost =
-              with %Decimal{} <- cost_per_kwh do
+              with %Decimal{} <- cost_per_unit do
                 [kwh_added, kwh_used]
                 |> Enum.reject(&is_nil/1)
                 |> Enum.max(Decimal)
-                |> Decimal.mult(cost_per_kwh)
+                |> Decimal.mult(cost_per_unit)
               end
 
             if match?(%Decimal{}, cost) or match?(%Decimal{}, session_fee) do
               Decimal.add(session_fee || 0, cost || 0)
             end
           end
-
-        {%{duration_min: minutes},
-         %CP{
-           geofence: %GeoFence{
-             billing_type: :per_minute,
-             cost_per_unit: cost_per_minute,
-             session_fee: session_fee
-           }
-         }}
-        when is_number(minutes) ->
-          cost = Decimal.mult(minutes, cost_per_minute)
-          Decimal.add(session_fee || 0, cost)
-
-        {_, _} ->
-          nil
       end
 
     Map.put(stats, :cost, cost)
+  end
+
+  defp get_cost_values(%GeoFence{} = geofence, datetime) do
+    hour = datetime |> DateTime.to_time() |> Time.to_erl() |> elem(0)
+
+    is_night_time = 
+      if geofence.night_start_hour <= geofence.night_end_hour do
+        hour >= geofence.night_start_hour and hour < geofence.night_end_hour
+      else
+        # Handle overnight period (e.g., 23:00-06:00)
+        hour >= geofence.night_start_hour or hour < geofence.night_end_hour
+      end
+
+    if is_night_time do
+      {geofence.night_cost_per_unit, geofence.night_session_fee}
+    else
+      {geofence.cost_per_unit, geofence.session_fee}
+    end
   end
 
   defp recalculate_efficiency(car, settings, opts \\ [{5, 8}, {4, 5}, {3, 3}, {2, 2}])
